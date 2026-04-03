@@ -1,0 +1,8 @@
+node_modules
+.serverless
+.docker
+
+.env
+.env*
+!.env.example
+!scripts/setup-local/.env.local
