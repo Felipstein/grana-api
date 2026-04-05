@@ -9,8 +9,6 @@ import { dynamoClient } from './dynamoClient';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
-  console.log(env.MAIN_TABLE_NAME);
-
   const command = new PutCommand({
     TableName: env.MAIN_TABLE_NAME,
     Item: {
