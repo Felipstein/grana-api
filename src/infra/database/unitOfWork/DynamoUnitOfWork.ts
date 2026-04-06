@@ -13,7 +13,7 @@ import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/IU
 import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
-export class DynamoDBUnitOfWork implements IUnitOfWork {
+export class DynamoUnitOfWork implements IUnitOfWork {
   constructor(
     private readonly client: DynamoDBDocumentClient,
     private readonly config: AppConfig,

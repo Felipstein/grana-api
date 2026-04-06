@@ -10,7 +10,7 @@ import { TransactionItem } from '../items/TransactionItem';
 import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
 
 @Injectable()
-export class DynamoDBTransactionRepository implements ITransactionRepository {
+export class DynamoTransactionRepository implements ITransactionRepository {
   constructor(
     protected readonly client: DynamoDBClient,
     protected readonly config: AppConfig,

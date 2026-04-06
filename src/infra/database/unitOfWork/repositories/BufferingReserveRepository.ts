@@ -1,12 +1,12 @@
 import { ReserveItem } from '@infra/database/items/ReserveItem';
-import { DynamoDBReserveRepository } from '@infra/database/repositories/DynamoDBReserveRepository';
+import { DynamoReserveRepository } from '@infra/database/repositories/DynamoReserveRepository';
 
 import type { TransactItem } from '../TransactItem';
 import type { Reserve } from '@application/entities/Reserve';
 import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import type { AppConfig } from '@config/AppConfig';
 
-export class BufferingReserveRepository extends DynamoDBReserveRepository {
+export class BufferingReserveRepository extends DynamoReserveRepository {
   constructor(
     private readonly buffer: TransactItem[],
     client: DynamoDBClient,

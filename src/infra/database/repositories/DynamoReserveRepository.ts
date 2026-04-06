@@ -9,7 +9,7 @@ import { Injectable } from '@kernel/decorators/Injectable';
 import { ReserveItem } from '../items/ReserveItem';
 
 @Injectable()
-export class DynamoDBReserveRepository implements IReserveRepository {
+export class DynamoReserveRepository implements IReserveRepository {
   constructor(
     private readonly client: DynamoDBClient,
     protected readonly config: AppConfig,
