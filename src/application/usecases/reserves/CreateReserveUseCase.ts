@@ -1,5 +1,5 @@
 import { Reserve } from '@application/entities/Reserve';
-import { IUnitOfWork } from '@application/interfaces/IUnitOfWork';
+import { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
 import { Injectable } from '@kernel/decorators/Injectable';
 
 type Input = Reserve.CreateParams;
@@ -10,16 +10,14 @@ type Output = {
 
 @Injectable()
 export class CreateReserveUseCase {
-  constructor(private readonly uow: IUnitOfWork) {}
+  constructor(private readonly reserveRepository: IReserveRepository) {}
 
   async execute(input: Input): Promise<Output> {
-    return this.uow.run(async ({ reserveRepository }) => {
-      const reserve = Reserve.create(input);
-      await reserveRepository.create(reserve);
+    const reserve = Reserve.create(input);
+    await this.reserveRepository.create(reserve);
 
-      return {
-        reserveId: reserve.id,
-      };
-    });
+    return {
+      reserveId: reserve.id,
+    };
   }
 }

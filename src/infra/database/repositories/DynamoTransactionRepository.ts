@@ -6,6 +6,7 @@ import { AppConfig } from '@config/AppConfig';
 import { Injectable } from '@kernel/decorators/Injectable';
 
 import { TransactionItem } from '../items/TransactionItem';
+import { mountUpdateCommandInput } from '../utils/mountUpdateCommandInput';
 
 import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
 
@@ -73,28 +74,13 @@ export class DynamoTransactionRepository implements ITransactionRepository {
   async save(transaction: Transaction): Promise<void> {
     const item = TransactionItem.fromEntity(transaction).toItem();
 
-    const fields = ['type', 'value', 'description', 'date', 'categoryId', 'observations'];
-
-    const command = new UpdateCommand({
-      TableName: this.config.database.mainTable,
-      Key: {
-        PK: item.PK,
-        SK: item.SK,
-      },
-      UpdateExpression: `SET ${fields.map((field) => `#${field} = :${field}`).join(', ')}`,
-      ExpressionAttributeNames: fields.reduce(
-        (attributeNames, field) => ({ ...attributeNames, [`#${field}`]: field }),
-        {},
-      ),
-      ExpressionAttributeValues: fields.reduce(
-        (attributeNames, field) => ({
-          ...attributeNames,
-          [`:${field}`]: item[field as keyof typeof item],
-        }),
-        {},
-      ),
-      ReturnValues: 'NONE',
-    });
+    const command = new UpdateCommand(
+      mountUpdateCommandInput({
+        tableName: this.config.database.mainTable,
+        item,
+        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations'],
+      }),
+    );
 
     await this.client.send(command);
   }

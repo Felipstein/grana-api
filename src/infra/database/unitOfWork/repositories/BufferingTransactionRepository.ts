@@ -1,5 +1,6 @@
 import { TransactionItem } from '@infra/database/items/TransactionItem';
 import { DynamoTransactionRepository } from '@infra/database/repositories/DynamoTransactionRepository';
+import { mountUpdateCommandInput } from '@infra/database/utils/mountUpdateCommandInput';
 
 import type { TransactItem } from '../TransactItem';
 import type { Transaction } from '@application/entities/Transaction';
@@ -21,6 +22,16 @@ export class BufferingTransactionRepository extends DynamoTransactionRepository 
         TableName: this.config.database.mainTable,
         Item: TransactionItem.fromEntity(transaction).toItem(),
       },
+    });
+  }
+
+  override async save(transaction: Transaction): Promise<void> {
+    this.buffer.push({
+      Update: mountUpdateCommandInput({
+        tableName: this.config.database.mainTable,
+        item: TransactionItem.fromEntity(transaction).toItem(),
+        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations'],
+      }),
     });
   }
 }

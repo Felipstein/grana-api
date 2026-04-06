@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Reserve } from '@application/entities/Reserve';
 import { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
@@ -7,6 +7,7 @@ import { AppConfig } from '@config/AppConfig';
 import { Injectable } from '@kernel/decorators/Injectable';
 
 import { ReserveItem } from '../items/ReserveItem';
+import { mountUpdateCommandInput } from '../utils/mountUpdateCommandInput';
 
 @Injectable()
 export class DynamoReserveRepository implements IReserveRepository {
@@ -41,6 +42,20 @@ export class DynamoReserveRepository implements IReserveRepository {
       TableName: this.config.database.mainTable,
       Item: reserveItem,
     });
+
+    await this.client.send(command);
+  }
+
+  async save(reserve: Reserve): Promise<void> {
+    const item = ReserveItem.fromEntity(reserve).toItem();
+
+    const command = new UpdateCommand(
+      mountUpdateCommandInput({
+        tableName: this.config.database.mainTable,
+        item,
+        fields: ['name', 'platform'],
+      }),
+    );
 
     await this.client.send(command);
   }
