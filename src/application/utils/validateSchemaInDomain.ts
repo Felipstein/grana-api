@@ -9,7 +9,7 @@ export function validateSchemaInDomain<Z extends ZodMiniType>(
   const { success, error, data } = schema.safeParse(dataToParse);
 
   if (!success) {
-    throw new ValueObjectError(error.issues, error.message);
+    throw new ValueObjectError(error.issues);
   }
 
   return data;

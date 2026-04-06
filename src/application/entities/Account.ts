@@ -1,26 +1,46 @@
 import { z } from 'zod/mini';
 
 import { IDService } from '@application/services/IDService';
+import { validateSchemaInDomain } from '@application/utils/validateSchemaInDomain';
 
 import { Entity } from './core/Entity';
 
-const attributesSchema = z.object({
+const attrsSchema = z.object({
   externalId: z.string().check(z.minLength(1)),
   name: z.string().check(z.minLength(2), z.maxLength(200)),
   email: z.email(),
 });
 
-export interface Account extends z.infer<typeof attributesSchema> {}
-export class Account extends Entity<typeof attributesSchema> {
-  readonly id: string;
+export class Account extends Entity {
+  readonly externalId: string;
 
-  constructor(id: string, attributes: z.input<typeof attributesSchema>) {
-    super(attributesSchema, attributes);
+  private _name: string;
+  readonly email: string;
 
-    this.id = id;
+  constructor(id: string, attrs: Account.CreateParams) {
+    super(id);
+
+    const validated = validateSchemaInDomain(attrsSchema, attrs);
+
+    this.externalId = validated.externalId;
+    this._name = validated.name;
+    this.email = validated.email;
   }
 
-  static create(attributes: z.input<typeof attributesSchema>) {
-    return new Account(IDService.generate(), attributes);
+  get name() {
+    return this._name;
   }
+
+  set name(name: string) {
+    this._name = validateSchemaInDomain(attrsSchema.shape.name, name);
+  }
+
+  static create(attrs: Account.CreateParams) {
+    return new Account(IDService.generate(), attrs);
+  }
+}
+
+export namespace Account {
+  export type CreateParams = z.input<typeof attrsSchema>;
+  export type Attributes = z.output<typeof attrsSchema>;
 }

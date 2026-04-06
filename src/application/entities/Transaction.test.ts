@@ -5,17 +5,21 @@ import { IDService } from '@application/services/IDService';
 
 import { Transaction } from './Transaction';
 
+const validAccountId = IDService.generate();
 const validCategoryId = IDService.generate();
 const validDate = new Date('2025-01-15');
 
 const create = (overrides?: Partial<Parameters<typeof Transaction.create>[0]>) =>
   Transaction.create({
+    accountId: overrides?.accountId ?? validAccountId,
+    parentId: overrides?.parentId,
     type: overrides?.type ?? Transaction.Type.EXPENSE,
     value: overrides?.value ?? 100.5,
     description: overrides?.description ?? 'Mercado',
     date: overrides?.date ?? validDate,
     categoryId: overrides?.categoryId ?? validCategoryId,
     observations: overrides?.observations ?? null,
+    reserveId: overrides?.reserveId,
     recurrence: overrides?.recurrence ?? null,
   });
 
@@ -25,6 +29,7 @@ describe('Transaction.create', () => {
       const transaction = create();
 
       expect(transaction.id).toBeTruthy();
+      expect(transaction.accountId).toBe(validAccountId);
       expect(transaction.type).toBe(Transaction.Type.EXPENSE);
       expect(transaction.value).toBe(100.5);
       expect(transaction.date).toStrictEqual(validDate);
@@ -44,6 +49,15 @@ describe('Transaction.create', () => {
 
     it('should accept observations when provided', () => {
       expect(create({ observations: 'Pago no débito' }).observations).toBe('Pago no débito');
+    });
+
+    it('should default reserveId to null', () => {
+      expect(create().reserveId).toBeNull();
+    });
+
+    it('should accept a valid reserveId', () => {
+      const reserveId = IDService.generate();
+      expect(create({ reserveId }).reserveId).toBe(reserveId);
     });
 
     it('should accept a date as ISO string (coercion)', () => {
@@ -128,6 +142,40 @@ describe('Transaction.create', () => {
 
     it('should throw for empty string', () => {
       expect(() => create({ categoryId: '' })).toThrow(ValueObjectError);
+    });
+  });
+
+  describe('reserveId', () => {
+    it('should throw for an invalid KSUID', () => {
+      expect(() => create({ reserveId: 'not-a-ksuid' })).toThrow(ValueObjectError);
+    });
+
+    it('should throw when reserveId is set together with recurrence (RECURRING)', () => {
+      expect(() =>
+        create({
+          reserveId: IDService.generate(),
+          recurrence: { type: Transaction.RecurrenceType.RECURRING },
+        }),
+      ).toThrow(ValueObjectError);
+    });
+
+    it('should throw when reserveId is set together with recurrence (INSTALLMENT)', () => {
+      expect(() =>
+        create({
+          reserveId: IDService.generate(),
+          recurrence: {
+            type: Transaction.RecurrenceType.INSTALLMENT,
+            totalInstallments: 6,
+            currentInstallment: 1,
+          },
+        }),
+      ).toThrow(ValueObjectError);
+    });
+
+    it('should allow reserveId without recurrence', () => {
+      expect(() =>
+        create({ reserveId: IDService.generate(), recurrence: null }),
+      ).not.toThrow();
     });
   });
 

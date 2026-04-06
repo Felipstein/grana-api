@@ -18,6 +18,7 @@
     "paths": {
       "@application/*": ["src/application/*"],
       "@config/*": ["src/config/*"],
+      "@infra/*": ["src/infra/*"],
       "@kernel/*": ["src/kernel/*"],
       "@typess/*": ["src/types/*"]
     }

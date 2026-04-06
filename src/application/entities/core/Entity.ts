@@ -1,22 +1,22 @@
+import { IDService } from '@application/services/IDService';
 import { validateSchemaInDomain } from '@application/utils/validateSchemaInDomain';
 
-import type { z, ZodMiniObject, ZodMiniType } from 'zod/mini';
+export abstract class Entity {
+  readonly id: string;
 
-export abstract class Entity<Z extends ZodMiniObject> {
-  constructor(schema: Z, attrs: z.input<Z>) {
-    const validated = validateSchemaInDomain(schema, attrs);
+  constructor(id: string) {
+    this.id = validateSchemaInDomain(IDService.idSchema, id);
+  }
 
-    for (const [key, fieldSchema] of Object.entries(schema.shape)) {
-      let value = validated[key];
-
-      Object.defineProperty(this, key, {
-        get: () => value,
-        set: (newVal) => {
-          value = validateSchemaInDomain(fieldSchema as ZodMiniType, newVal);
-        },
-        enumerable: true,
-        configurable: true,
-      });
+  equals(entity: unknown) {
+    if (entity === this) {
+      return true;
     }
+
+    if (!entity || typeof entity !== 'object') {
+      return false;
+    }
+
+    return (entity as Entity).id === this.id;
   }
 }

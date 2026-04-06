@@ -1,6 +1,6 @@
 import { CreateTableCommand, DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 
-import { dynamoClient } from '../../../src/dynamoClient';
+import { dynamoClient } from '@infra/aws/dynamoClient';
 
 import type { Logger } from '../logger';
 import type { Resource } from '../Resource';

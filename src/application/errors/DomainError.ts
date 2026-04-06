@@ -13,5 +13,6 @@ export class DomainError extends Error {
 export namespace DomainError {
   export enum Code {
     INVALID_VALUE_OBJECT = 'INVALID_VALUE_OBJECT',
+    RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
   }
 }
