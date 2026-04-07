@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Reserve } from '@application/entities/Reserve';
 import { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
@@ -56,6 +56,18 @@ export class DynamoReserveRepository implements IReserveRepository {
         fields: ['name', 'platform'],
       }),
     );
+
+    await this.client.send(command);
+  }
+
+  async delete(accountId: string, reserveId: string): Promise<void> {
+    const command = new DeleteCommand({
+      TableName: this.config.database.mainTable,
+      Key: {
+        PK: ReserveItem.getPK(accountId),
+        SK: ReserveItem.getSK(reserveId),
+      },
+    });
 
     await this.client.send(command);
   }

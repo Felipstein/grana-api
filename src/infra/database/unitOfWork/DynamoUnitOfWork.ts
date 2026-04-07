@@ -9,7 +9,7 @@ import { BufferingReserveRepository } from './repositories/BufferingReserveRepos
 import { BufferingTransactionRepository } from './repositories/BufferingTransactionRepository';
 import { TransactItem } from './TransactItem';
 
-import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/IUnitOfWork';
+import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
 import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()

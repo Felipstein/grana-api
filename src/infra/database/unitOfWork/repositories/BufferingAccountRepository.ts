@@ -7,7 +7,15 @@ import type { IAccountRepository } from '@application/interfaces/repositories/Ac
 export class BufferingAccountRepository implements IAccountRepository {
   constructor(private readonly buffer: TransactItem[]) {}
 
+  async findById(_id: string): Promise<Account | null> {
+    throw new MethodNotAllowedError('findById');
+  }
+
   async findByEmail(_email: string): Promise<Account | null> {
     throw new MethodNotAllowedError('findByEmail');
+  }
+
+  async save(_account: Account): Promise<void> {
+    throw new MethodNotAllowedError('save');
   }
 }

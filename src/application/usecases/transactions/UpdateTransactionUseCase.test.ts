@@ -5,54 +5,11 @@ import { Transaction } from '@application/entities/Transaction';
 import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { IDService } from '@application/services/IDService';
 
+import { InMemoryUnitOfWork } from '@application/_test/inMemory';
+
 import { UpdateTransactionUseCase } from './UpdateTransactionUseCase';
 
-import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/IUnitOfWork';
-import type { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
-import type { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
-import type { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
-import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
 import type { ResolveCategoryService } from '@application/services/ResolveCategoryService';
-
-// ─── In-memory implementations ───────────────────────────────────────────────
-
-class InMemoryTransactionRepository implements ITransactionRepository {
-  readonly items: Transaction[] = [];
-
-  async findById(id: string) {
-    return this.items.find((t) => t.id === id) ?? null;
-  }
-
-  async listByParentId(parentId: string) {
-    return this.items.filter((t) => t.parentId === parentId);
-  }
-
-  async create(transaction: Transaction) {
-    this.items.push(transaction);
-  }
-
-  async save(transaction: Transaction) {
-    const idx = this.items.findIndex((t) => t.id === transaction.id);
-    if (idx >= 0) this.items[idx] = transaction;
-  }
-}
-
-class InMemoryUnitOfWork implements IUnitOfWork {
-  readonly transactionRepository = new InMemoryTransactionRepository();
-
-  private readonly accountRepository = {} as IAccountRepository;
-  private readonly reserveRepository = {} as IReserveRepository;
-  private readonly categoryRepository = {} as ICategoryRepository;
-
-  async run<T>(work: (ctx: IUnitOfWorkContext) => Promise<T>): Promise<T> {
-    return work({
-      transactionRepository: this.transactionRepository,
-      accountRepository: this.accountRepository,
-      reserveRepository: this.reserveRepository,
-      categoryRepository: this.categoryRepository,
-    });
-  }
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -114,7 +71,7 @@ describe('UpdateTransactionUseCase', () => {
       await expect(
         useCase.execute({
           transactionId: transaction.id,
-          accountId: IDService.generate(), // different account
+          accountId: IDService.generate(),
           data: {},
         }),
       ).rejects.toThrow(ResourceNotFoundError);

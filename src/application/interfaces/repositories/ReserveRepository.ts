@@ -6,4 +6,6 @@ export interface IReserveRepository {
   create(reserve: Reserve): Promise<void>;
 
   save(reserve: Reserve): Promise<void>;
+
+  delete(accountId: string, reserveId: string): Promise<void>;
 }

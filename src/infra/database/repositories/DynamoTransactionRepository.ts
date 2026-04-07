@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Transaction } from '@application/entities/Transaction';
 import { AppConfig } from '@config/AppConfig';
@@ -81,6 +81,20 @@ export class DynamoTransactionRepository implements ITransactionRepository {
         fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations'],
       }),
     );
+
+    await this.client.send(command);
+  }
+
+  async delete(transaction: Transaction): Promise<void> {
+    const item = TransactionItem.fromEntity(transaction).toItem();
+
+    const command = new DeleteCommand({
+      TableName: this.config.database.mainTable,
+      Key: {
+        PK: item.PK,
+        SK: item.SK,
+      },
+    });
 
     await this.client.send(command);
   }

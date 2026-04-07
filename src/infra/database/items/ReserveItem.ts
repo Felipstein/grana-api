@@ -41,6 +41,7 @@ export namespace ReserveItem {
     name: string;
     platform: string;
     value: number;
+    categoryId: string;
   };
 
   export type Type = DynamoItem.Type<Keys, Attributes, 'Reserve'>;

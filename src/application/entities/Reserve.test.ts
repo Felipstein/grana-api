@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { DomainError } from '@application/errors/DomainError';
 import { ValueObjectError } from '@application/errors/ValueObjectError';
 import { IDService } from '@application/services/IDService';
 
 import { Reserve } from './Reserve';
 
 const validAccountId = IDService.generate();
+const validCategoryId = IDService.generate();
 
 const create = (overrides?: Partial<Reserve.CreateParams>) =>
   Reserve.create({
@@ -13,6 +15,7 @@ const create = (overrides?: Partial<Reserve.CreateParams>) =>
     name: overrides?.name ?? 'Nubank',
     platform: overrides?.platform ?? 'Banco Digital',
     value: overrides?.value ?? 1500,
+    categoryId: overrides?.categoryId ?? validCategoryId,
   });
 
 describe('Reserve.create', () => {
@@ -25,6 +28,7 @@ describe('Reserve.create', () => {
       expect(reserve.name).toBe('Nubank');
       expect(reserve.platform).toBe('Banco Digital');
       expect(reserve.value).toBe(1500);
+      expect(reserve.categoryId).toBe(validCategoryId);
     });
 
     it('should generate a unique id on each call', () => {
@@ -63,6 +67,16 @@ describe('Reserve.create', () => {
 
     it('should throw for an empty accountId', () => {
       expect(() => create({ accountId: '' })).toThrow(ValueObjectError);
+    });
+  });
+
+  describe('categoryId', () => {
+    it('should throw for a non-KSUID categoryId', () => {
+      expect(() => create({ categoryId: 'not-a-ksuid' })).toThrow(ValueObjectError);
+    });
+
+    it('should throw for an empty categoryId', () => {
+      expect(() => create({ categoryId: '' })).toThrow(ValueObjectError);
     });
   });
 
@@ -142,21 +156,52 @@ describe('Reserve setters', () => {
     });
   });
 
-  describe('value', () => {
-    it('should update value with a valid amount', () => {
-      const reserve = create();
-      reserve.value = 5000;
-      expect(reserve.value).toBe(5000);
-    });
+});
 
-    it('should throw for a negative value', () => {
-      const reserve = create();
-      expect(() => (reserve.value = -100)).toThrow(ValueObjectError);
-    });
+describe('Reserve.deposit', () => {
+  it('should increase the value by the deposited amount', () => {
+    const reserve = create({ value: 1000 });
+    reserve.deposit(500);
+    expect(reserve.value).toBe(1500);
+  });
 
-    it('should throw above 1_000_000_000', () => {
-      const reserve = create();
-      expect(() => (reserve.value = 1_000_000_001)).toThrow(ValueObjectError);
-    });
+  it('should allow depositing 0', () => {
+    const reserve = create({ value: 1000 });
+    reserve.deposit(0);
+    expect(reserve.value).toBe(1000);
+  });
+
+  it('should accumulate multiple deposits', () => {
+    const reserve = create({ value: 0 });
+    reserve.deposit(200);
+    reserve.deposit(300);
+    expect(reserve.value).toBe(500);
+  });
+});
+
+describe('Reserve.withdraw', () => {
+  it('should decrease the value by the withdrawn amount', () => {
+    const reserve = create({ value: 1000 });
+    reserve.withdraw(400);
+    expect(reserve.value).toBe(600);
+  });
+
+  it('should allow withdrawing the full balance', () => {
+    const reserve = create({ value: 1000 });
+    reserve.withdraw(1000);
+    expect(reserve.value).toBe(0);
+  });
+
+  it('should throw DomainError when withdrawing more than the balance', () => {
+    const reserve = create({ value: 500 });
+    expect(() => reserve.withdraw(501)).toThrow(DomainError);
+  });
+
+  it('should not change the value when withdrawal fails', () => {
+    const reserve = create({ value: 500 });
+    try {
+      reserve.withdraw(600);
+    } catch {}
+    expect(reserve.value).toBe(500);
   });
 });

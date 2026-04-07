@@ -43,4 +43,19 @@ export class Account extends Entity {
 export namespace Account {
   export type CreateParams = z.input<typeof attrsSchema>;
   export type Attributes = z.output<typeof attrsSchema>;
+
+  export class Builder {
+    private constructor(
+      readonly id: string,
+      private readonly attrs: Omit<CreateParams, 'externalId'>,
+    ) {}
+
+    create(externalId: string) {
+      return new Account(this.id, { ...this.attrs, externalId });
+    }
+
+    static init(attrs: Omit<CreateParams, 'externalId'>) {
+      return new Builder(IDService.generate(), attrs);
+    }
+  }
 }

@@ -1,7 +1,7 @@
 import { Transaction } from '@application/entities/Transaction';
 import { Injectable } from '@kernel/decorators/Injectable';
 
-import type { IUnitOfWork } from '@application/interfaces/IUnitOfWork';
+import type { IUnitOfWork } from '@application/interfaces/UnitOfWork';
 import type { ResolveCategoryService } from '@application/services/ResolveCategoryService';
 
 type Input = Omit<Transaction.CreateParams, 'categoryId'> & {

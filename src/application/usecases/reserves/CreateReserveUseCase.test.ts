@@ -2,52 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { IDService } from '@application/services/IDService';
 
+import { InMemoryUnitOfWork } from '@application/_test/inMemory';
+
 import { CreateReserveUseCase } from './CreateReserveUseCase';
-
-import type { Reserve } from '@application/entities/Reserve';
-import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/IUnitOfWork';
-import type { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
-import type { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
-import type { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
-import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
-
-// ─── In-memory implementations ───────────────────────────────────────────────
-
-class InMemoryReserveRepository implements IReserveRepository {
-  readonly items: Reserve[] = [];
-
-  async findById(_accountId: string, reserveId: string) {
-    return this.items.find((r) => r.id === reserveId) ?? null;
-  }
-
-  async create(reserve: Reserve) {
-    this.items.push(reserve);
-  }
-}
-
-class InMemoryUnitOfWork implements IUnitOfWork {
-  readonly reserveRepository = new InMemoryReserveRepository();
-
-  private readonly accountRepository = {} as IAccountRepository;
-  private readonly transactionRepository = {} as ITransactionRepository;
-  private readonly categoryRepository = {} as ICategoryRepository;
-
-  async run<T>(work: (ctx: IUnitOfWorkContext) => Promise<T>): Promise<T> {
-    return work({
-      reserveRepository: this.reserveRepository,
-      accountRepository: this.accountRepository,
-      transactionRepository: this.transactionRepository,
-      categoryRepository: this.categoryRepository,
-    });
-  }
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const validInput: Reserve.CreateParams = {
+const validInput = {
   accountId: IDService.generate(),
-  name: 'Nubank',
-  platform: 'Banco Digital',
+  name: 'Reserva de Emergência',
+  platform: 'Nubank',
   value: 1500,
 };
 
@@ -79,6 +43,26 @@ describe('CreateReserveUseCase', () => {
     expect(saved.name).toBe(validInput.name);
     expect(saved.platform).toBe(validInput.platform);
     expect(saved.value).toBe(validInput.value);
+  });
+
+  it('should create a category with the reserve name', async () => {
+    const { uow, useCase } = makeUseCase();
+
+    await useCase.execute(validInput);
+
+    expect(uow.categoryRepository.items).toHaveLength(1);
+    expect(uow.categoryRepository.items[0].name).toBe(validInput.name);
+    expect(uow.categoryRepository.items[0].accountId).toBe(validInput.accountId);
+  });
+
+  it('should link the reserve to its category', async () => {
+    const { uow, useCase } = makeUseCase();
+
+    await useCase.execute(validInput);
+
+    const reserve = uow.reserveRepository.items[0];
+    const category = uow.categoryRepository.items[0];
+    expect(reserve.categoryId).toBe(category.id);
   });
 
   it('should generate a unique id on each execution', async () => {
