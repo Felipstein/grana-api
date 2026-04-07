@@ -10,7 +10,7 @@ type Input = Omit<Transaction.CreateParams, 'categoryId'> & {
 
 type Output = {
   transactionId: string;
-  chilIds: string[];
+  childIds: string[];
 };
 
 @Injectable()
@@ -46,7 +46,7 @@ export class CreateTransactionUseCase {
 
         for (let i = input.recurrence.currentInstallment ?? 1; i <= totalInstallments; i++) {
           let date = typeof input.date === 'string' ? new Date(input.date) : input.date;
-          date = new Date(date.getFullYear(), date.getMonth() + i, date.getDay());
+          date = new Date(date.getFullYear(), date.getMonth() + i, date.getDate());
 
           const child = Transaction.create({
             accountId: input.accountId,
@@ -75,7 +75,7 @@ export class CreateTransactionUseCase {
 
       return {
         transactionId: transaction.id,
-        chilIds: children.map((child) => child.id),
+        childIds: children.map((child) => child.id),
       };
     });
   }

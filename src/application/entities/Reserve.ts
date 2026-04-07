@@ -54,10 +54,24 @@ export class Reserve extends Entity {
   }
 
   deposit(value: number) {
+    if (value < 0) {
+      throw new DomainError(
+        DomainError.Code.INVALID_VALUE_OBJECT,
+        'Cannot deposit a negative value.',
+      );
+    }
+
     this._value += value;
   }
 
   withdraw(value: number) {
+    if (value < 0) {
+      throw new DomainError(
+        DomainError.Code.INVALID_VALUE_OBJECT,
+        'Cannot withdraw a negative value.',
+      );
+    }
+
     const newValue = this._value - value;
 
     if (newValue < 0) {

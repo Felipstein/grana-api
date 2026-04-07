@@ -177,6 +177,17 @@ describe('Reserve.deposit', () => {
     reserve.deposit(300);
     expect(reserve.value).toBe(500);
   });
+
+  it('should throw DomainError when depositing a negative value', () => {
+    const reserve = create({ value: 1000 });
+    expect(() => reserve.deposit(-1)).toThrow(DomainError);
+  });
+
+  it('should not change the value when deposit fails', () => {
+    const reserve = create({ value: 1000 });
+    try { reserve.deposit(-1); } catch {}
+    expect(reserve.value).toBe(1000);
+  });
 });
 
 describe('Reserve.withdraw', () => {
@@ -197,11 +208,14 @@ describe('Reserve.withdraw', () => {
     expect(() => reserve.withdraw(501)).toThrow(DomainError);
   });
 
+  it('should throw DomainError when withdrawing a negative value', () => {
+    const reserve = create({ value: 1000 });
+    expect(() => reserve.withdraw(-1)).toThrow(DomainError);
+  });
+
   it('should not change the value when withdrawal fails', () => {
     const reserve = create({ value: 500 });
-    try {
-      reserve.withdraw(600);
-    } catch {}
+    try { reserve.withdraw(600); } catch {}
     expect(reserve.value).toBe(500);
   });
 });

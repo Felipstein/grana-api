@@ -1,4 +1,5 @@
 import { Category } from '@application/entities/Category';
+import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
 import { Injectable } from '@kernel/decorators/Injectable';
 
@@ -19,6 +20,8 @@ export class ResolveCategoryService {
       if (existing) {
         return existing;
       }
+
+      throw new ResourceNotFoundError('Category not found.');
     }
 
     const category = Category.create({

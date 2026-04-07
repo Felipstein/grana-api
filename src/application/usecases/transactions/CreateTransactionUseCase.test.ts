@@ -138,6 +138,25 @@ describe('CreateTransactionUseCase', () => {
       const uniqueMonths = new Set(dates);
       expect(uniqueMonths.size).toBe(12);
     });
+
+    it('should preserve the day of the month on each child', async () => {
+      const { uow, useCase } = makeUseCase();
+
+      await useCase.execute(recurringInput);
+
+      const children = uow.transactionRepository.items.slice(1);
+      expect(children.every((t) => t.date.getDate() === validInput.date.getDate())).toBe(true);
+    });
+
+    it('should return childIds with the ids of all created children', async () => {
+      const { uow, useCase } = makeUseCase();
+
+      const { childIds } = await useCase.execute(recurringInput);
+
+      const children = uow.transactionRepository.items.slice(1);
+      expect(childIds).toHaveLength(12);
+      expect(childIds).toEqual(children.map((t) => t.id));
+    });
   });
 
   describe('installment', () => {
