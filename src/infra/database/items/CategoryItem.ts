@@ -48,4 +48,6 @@ export namespace CategoryItem {
     color: string;
     bgColor: string;
   };
+
+  export type Type = DynamoItem.Type<Keys, Attributes, 'Category'>;
 }
