@@ -1,7 +1,6 @@
 import type { Category } from '@application/entities/Category';
 
-export interface ICategoryRepository {
-  findById(id: string): Promise<Category | null>;
-
-  create(category: Category): Promise<void>;
+export abstract class ICategoryRepository {
+  abstract findById(accountId: string, categoryId: string): Promise<Category | null>;
+  abstract create(category: Category): Promise<void>;
 }

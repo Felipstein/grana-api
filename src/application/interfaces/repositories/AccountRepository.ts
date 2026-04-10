@@ -1,11 +1,8 @@
 import type { Account } from '@application/entities/Account';
 
-export interface IAccountRepository {
-  findById(id: string): Promise<Account | null>;
-
-  findByEmail(email: string): Promise<Account | null>;
-
-  create(account: Account): Promise<void>;
-
-  save(account: Account): Promise<void>;
+export abstract class IAccountRepository {
+  abstract findById(id: string): Promise<Account | null>;
+  abstract findByEmail(email: string): Promise<Account | null>;
+  abstract create(account: Account): Promise<void>;
+  abstract save(account: Account): Promise<void>;
 }

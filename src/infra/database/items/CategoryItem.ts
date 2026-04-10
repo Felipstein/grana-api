@@ -1,6 +1,6 @@
-import { DynamoItem } from './core/DynamoItem';
+import { Category } from '@application/entities/Category';
 
-import type { Category } from '@application/entities/Category';
+import { DynamoItem } from './core/DynamoItem';
 
 export class CategoryItem extends DynamoItem<
   CategoryItem.Keys,
@@ -31,6 +31,15 @@ export class CategoryItem extends DynamoItem<
       name: category.name,
       color: category.color,
       bgColor: category.bgColor,
+    });
+  }
+
+  static toEntity(item: CategoryItem.Type): Category {
+    return new Category(item.id, {
+      accountId: item.accountId,
+      name: item.name,
+      color: item.color,
+      bgColor: item.bgColor,
     });
   }
 }

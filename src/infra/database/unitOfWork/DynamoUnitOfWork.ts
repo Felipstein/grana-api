@@ -1,5 +1,6 @@
 import { TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 
+import { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
 import { AppConfig } from '@config/AppConfig';
 import { Injectable } from '@kernel/decorators/Injectable';
 
@@ -9,21 +10,22 @@ import { BufferingReserveRepository } from './repositories/BufferingReserveRepos
 import { BufferingTransactionRepository } from './repositories/BufferingTransactionRepository';
 import { TransactItem } from './TransactItem';
 
-import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
 import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
-export class DynamoUnitOfWork implements IUnitOfWork {
+export class DynamoUnitOfWork extends IUnitOfWork {
   constructor(
     private readonly client: DynamoDBDocumentClient,
     private readonly config: AppConfig,
-  ) {}
+  ) {
+    super();
+  }
 
   async run<T>(work: (ctx: IUnitOfWorkContext) => Promise<T>): Promise<T> {
     const buffer: TransactItem[] = [];
 
     const ctx: IUnitOfWorkContext = {
-      accountRepository: new BufferingAccountRepository(buffer),
+      accountRepository: new BufferingAccountRepository(buffer, this.client, this.config),
       transactionRepository: new BufferingTransactionRepository(buffer, this.client, this.config),
       reserveRepository: new BufferingReserveRepository(buffer, this.client, this.config),
       categoryRepository: new BufferingCategoryRepository(buffer, this.config),

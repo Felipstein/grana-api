@@ -13,5 +13,6 @@ export class ApplicationError extends Error {
 export namespace ApplicationError {
   export enum Code {
     EMAIL_ALREADY_TAKEN = 'EMAIL_ALREADY_TAKEN',
+    INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   }
 }

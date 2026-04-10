@@ -1,5 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Transaction } from '@application/entities/Transaction';
 import { TransactionSummaryService } from '@application/services/TransactionSummaryService';
@@ -32,6 +31,7 @@ type Input = {
     maxPeriod?: Period;
     recurrenceType?: Set<Transaction.RecurrenceType | 'ALL'>;
     categoryIds?: Set<string>;
+    hideReserveTransactions?: boolean;
   };
 };
 
@@ -44,7 +44,7 @@ type Output = {
 @Injectable()
 export class ListTransactionsQuery {
   constructor(
-    private readonly dynamoClient: DynamoDBClient,
+    private readonly dynamoClient: DynamoDBDocumentClient,
     private readonly config: AppConfig,
     private readonly categoryLoader: CategoryLoader,
     private readonly summaryService: TransactionSummaryService,
@@ -179,6 +179,8 @@ export class ListTransactionsQuery {
     if (!filters) return items;
 
     return items.filter((item) => {
+      if (filters.hideReserveTransactions && item.reserveId) return false;
+
       if (filters.categoryIds && !filters.categoryIds.has(item.categoryId)) return false;
 
       if (filters.recurrenceType && !filters.recurrenceType.has('ALL')) {

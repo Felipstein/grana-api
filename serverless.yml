@@ -9,14 +9,48 @@ provider:
   memorySize: 128
   stage: ${opt:stage, 'dev'}
   environment:
-    LOCAL_ENDPOINT_URL: ${self:custom.awsEndpoint.${self:provider.stage}, ""}
     MAIN_TABLE_NAME: ${self:custom.resourceNames.MainTable}
+    COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+    COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
   iam:
     role:
       statements:
         - Effect: Allow
-          Action: dynamodb:PutItem
-          Resource: !GetAtt MainTable.Arn
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:TransactWriteItems
+          Resource:
+            - !GetAtt MainTable.Arn
+            - !Sub '${MainTable.Arn}/index/*'
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminConfirmSignUp
+            - cognito-idp:AdminDeleteUser
+          Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*'
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+        - OPTIONS
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}'
+        audience:
+          - !Ref CognitoUserPoolClient
 
 
 plugins:
@@ -25,14 +59,12 @@ plugins:
 custom:
   resourceNames:
     MainTable: ${self:service}-${self:provider.stage}-table
+    UserPool: ${self:service}-${self:provider.stage}-user-pool
+    UserPoolClient: ${self:service}-${self:provider.stage}-user-pool-client
   serverless-offline:
     httpPort: 3000
     lambdaPort: 3002
     noAuth: true
-  awsEndpoint:
-    local: "http://localhost:4566"
-    dev: ""
-    prod: ""
 
 package:
   individually: true
@@ -42,27 +74,262 @@ build:
     configFile: ./esbuild.config.mjs
 
 functions:
-  hello:
-    handler: src/hello.handler
+  # ─── Auth (public) ───────────────────────────────────────────────────────────
+  authSignUp:
+    handler: src/functions/auth/signUp.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /auth/sign-up
+
+  authSignIn:
+    handler: src/functions/auth/signIn.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /auth/sign-in
+
+  authRefreshToken:
+    handler: src/functions/auth/refreshToken.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /auth/refresh-token
+
+  # ─── Cognito trigger ─────────────────────────────────────────────────────────
+  cognitoPreTokenGeneration:
+    handler: src/functions/auth/preTokenGeneration.handler
+    environment:
+      COGNITO_USER_POOL_ID: ''
+      COGNITO_CLIENT_ID: ''
+
+  # ─── Me (protected) ──────────────────────────────────────────────────────────
+  meGet:
+    handler: src/functions/me/get.handler
     events:
       - httpApi:
           method: GET
-          path: /
+          path: /me
+          authorizer:
+            name: cognitoAuthorizer
+
+  meUpdate:
+    handler: src/functions/me/update.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /me
+          authorizer:
+            name: cognitoAuthorizer
+
+  meChangePassword:
+    handler: src/functions/me/changePassword.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /me/change-password
+          authorizer:
+            name: cognitoAuthorizer
+
+  # ─── Transactions (protected) ────────────────────────────────────────────────
+  transactionsList:
+    handler: src/functions/transactions/list.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /transactions
+          authorizer:
+            name: cognitoAuthorizer
+
+  transactionsCreate:
+    handler: src/functions/transactions/create.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /transactions
+          authorizer:
+            name: cognitoAuthorizer
+
+  transactionsUpdate:
+    handler: src/functions/transactions/update.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /transactions/{id}
+          authorizer:
+            name: cognitoAuthorizer
+
+  transactionsDelete:
+    handler: src/functions/transactions/delete.handler
+    events:
+      - httpApi:
+          method: DELETE
+          path: /transactions/{id}
+          authorizer:
+            name: cognitoAuthorizer
+
+  # ─── Commitments (protected) ─────────────────────────────────────────────────
+  commitmentsList:
+    handler: src/functions/commitments/list.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /commitments
+          authorizer:
+            name: cognitoAuthorizer
+
+  # ─── Reserves (protected) ────────────────────────────────────────────────────
+  reservesList:
+    handler: src/functions/reserves/list.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /reserves
+          authorizer:
+            name: cognitoAuthorizer
+
+  reservesCreate:
+    handler: src/functions/reserves/create.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /reserves
+          authorizer:
+            name: cognitoAuthorizer
+
+  reservesUpdate:
+    handler: src/functions/reserves/update.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /reserves/{id}
+          authorizer:
+            name: cognitoAuthorizer
+
+  reservesDelete:
+    handler: src/functions/reserves/delete.handler
+    events:
+      - httpApi:
+          method: DELETE
+          path: /reserves/{id}
+          authorizer:
+            name: cognitoAuthorizer
+
+  reservesDeposit:
+    handler: src/functions/reserves/deposit.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /reserves/{id}/deposit
+          authorizer:
+            name: cognitoAuthorizer
+
+  reservesWithdraw:
+    handler: src/functions/reserves/withdraw.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /reserves/{id}/withdraw
+          authorizer:
+            name: cognitoAuthorizer
+
+  # ─── Dashboard (protected) ───────────────────────────────────────────────────
+  dashboardGet:
+    handler: src/functions/dashboard/get.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /dashboard
+          authorizer:
+            name: cognitoAuthorizer
 
 resources:
   Resources:
+    # ─── DynamoDB ──────────────────────────────────────────────────────────────
     MainTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:custom.resourceNames.MainTable}
         BillingMode: PAY_PER_REQUEST
-        DeletionProtectionEnabled: true
-        PointInTimeRecoverySpecification:
-          PointInTimeRecoveryEnabled: true
-          RecoveryPeriodInDays: 35
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+          - AttributeName: GSI1PK
+            AttributeType: S
+          - AttributeName: GSI1SK
+            AttributeType: S
+          - AttributeName: GSI2PK
+            AttributeType: S
+          - AttributeName: GSI2SK
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: PK
             KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1PK
+                KeyType: HASH
+              - AttributeName: GSI1SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: GSI2
+            KeySchema:
+              - AttributeName: GSI2PK
+                KeyType: HASH
+              - AttributeName: GSI2SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    # ─── Cognito ───────────────────────────────────────────────────────────────
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.resourceNames.UserPool}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        Schema:
+          - Name: accountId
+            AttributeDataType: String
+            Mutable: false
+            Required: false
+        LambdaConfig:
+          PreTokenGenerationConfig:
+            LambdaArn: !GetAtt CognitoPreTokenGenerationLambdaFunction.Arn
+            LambdaVersion: V2_0
+        DeletionProtection: ACTIVE
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.resourceNames.UserPoolClient}
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        PreventUserExistenceErrors: ENABLED
+
+    # ─── Permission for Cognito to invoke the Pre Token Generation Lambda ──────
+    CognitoPreTokenGenerationPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !GetAtt CognitoPreTokenGenerationLambdaFunction.Arn
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: !GetAtt CognitoUserPool.Arn

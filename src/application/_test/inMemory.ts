@@ -3,14 +3,14 @@ import { Category } from '@application/entities/Category';
 import { Reserve } from '@application/entities/Reserve';
 import { Transaction } from '@application/entities/Transaction';
 
-import type { IAuthGateway } from '@application/interfaces/AuthGateway';
-import type { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
-import type { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
-import type { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
-import type { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
+import { IAuthGateway } from '@application/interfaces/AuthGateway';
+import { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
+import { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
+import { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
+import { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
 import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
 
-export class InMemoryAccountRepository implements IAccountRepository {
+export class InMemoryAccountRepository extends IAccountRepository {
   readonly items: Account[] = [];
 
   async findById(id: string) {
@@ -32,11 +32,11 @@ export class InMemoryAccountRepository implements IAccountRepository {
   }
 }
 
-export class InMemoryCategoryRepository implements ICategoryRepository {
+export class InMemoryCategoryRepository extends ICategoryRepository {
   readonly items: Category[] = [];
 
-  async findById(id: string) {
-    return this.items.find((c) => c.id === id) ?? null;
+  async findById(_accountId: string, categoryId: string) {
+    return this.items.find((c) => c.id === categoryId) ?? null;
   }
 
   async create(category: Category) {
@@ -44,7 +44,7 @@ export class InMemoryCategoryRepository implements ICategoryRepository {
   }
 }
 
-export class InMemoryReserveRepository implements IReserveRepository {
+export class InMemoryReserveRepository extends IReserveRepository {
   readonly items: Reserve[] = [];
 
   async findById(accountId: string, reserveId: string) {
@@ -92,7 +92,7 @@ export class InMemoryTransactionRepository implements ITransactionRepository {
   }
 }
 
-export class InMemoryAuthGateway implements IAuthGateway {
+export class InMemoryAuthGateway extends IAuthGateway {
   readonly signedUpUsers: Array<{ accountId: string; email: string; externalId: string }> = [];
 
   async signUp(accountId: string, email: string, _password: string): Promise<IAuthGateway.SignUpResult> {
@@ -117,7 +117,7 @@ export class InMemoryAuthGateway implements IAuthGateway {
   }
 }
 
-export class InMemoryUnitOfWork implements IUnitOfWork {
+export class InMemoryUnitOfWork extends IUnitOfWork {
   readonly accountRepository = new InMemoryAccountRepository();
   readonly categoryRepository = new InMemoryCategoryRepository();
   readonly reserveRepository = new InMemoryReserveRepository();

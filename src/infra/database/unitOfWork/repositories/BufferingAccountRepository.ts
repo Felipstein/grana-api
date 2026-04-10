@@ -1,21 +1,36 @@
-import { MethodNotAllowedError } from '../errors/MethodNotAllowedError';
+import { AccountItem } from '@infra/database/items/AccountItem';
+import { DynamoAccountRepository } from '@infra/database/repositories/DynamoAccountRepository';
 
 import type { TransactItem } from '../TransactItem';
 import type { Account } from '@application/entities/Account';
-import type { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import type { AppConfig } from '@config/AppConfig';
 
-export class BufferingAccountRepository implements IAccountRepository {
-  constructor(private readonly buffer: TransactItem[]) {}
-
-  async findById(_id: string): Promise<Account | null> {
-    throw new MethodNotAllowedError('findById');
+export class BufferingAccountRepository extends DynamoAccountRepository {
+  constructor(
+    private readonly buffer: TransactItem[],
+    client: DynamoDBClient,
+    config: AppConfig,
+  ) {
+    super(client, config);
   }
 
-  async findByEmail(_email: string): Promise<Account | null> {
-    throw new MethodNotAllowedError('findByEmail');
+  override async create(account: Account): Promise<void> {
+    this.buffer.push({
+      Put: {
+        TableName: this.config.database.mainTable,
+        Item: AccountItem.fromEntity(account).toItem(),
+      },
+    });
   }
 
-  async save(_account: Account): Promise<void> {
-    throw new MethodNotAllowedError('save');
+  override async save(account: Account): Promise<void> {
+    this.buffer.push({
+      Put: {
+        TableName: this.config.database.mainTable,
+        Item: AccountItem.fromEntity(account).toItem(),
+        ConditionExpression: 'attribute_exists(PK)',
+      },
+    });
   }
 }

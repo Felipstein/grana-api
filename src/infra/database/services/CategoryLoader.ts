@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { paginateQuery } from '@aws-sdk/lib-dynamodb';
 
 import { AppConfig } from '@config/AppConfig';
@@ -10,7 +10,7 @@ export type CategoryData = Pick<CategoryItem.Attributes, 'name' | 'color' | 'bgC
 @Injectable()
 export class CategoryLoader {
   constructor(
-    private readonly dynamoClient: DynamoDBClient,
+    private readonly dynamoClient: DynamoDBDocumentClient,
     private readonly config: AppConfig,
   ) {}
 

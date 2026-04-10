@@ -1,13 +1,17 @@
-export interface IAuthGateway {
-  signUp(accountId: string, email: string, password: string): Promise<IAuthGateway.SignUpResult>;
+export abstract class IAuthGateway {
+  abstract signUp(
+    accountId: string,
+    email: string,
+    password: string,
+  ): Promise<IAuthGateway.SignUpResult>;
 
-  signIn(email: string, password: string): Promise<IAuthGateway.AuthResult>;
+  abstract signIn(email: string, password: string): Promise<IAuthGateway.AuthResult>;
 
-  refreshToken(refreshToken: string): Promise<IAuthGateway.AuthResult>;
+  abstract refreshToken(refreshToken: string): Promise<IAuthGateway.AuthResult>;
 
-  changePassword(params: IAuthGateway.ChangePasswordParams): Promise<void>;
+  abstract changePassword(params: IAuthGateway.ChangePasswordParams): Promise<void>;
 
-  deleteUser(externalId: string): Promise<void>;
+  abstract deleteUser(externalId: string): Promise<void>;
 }
 
 export namespace IAuthGateway {

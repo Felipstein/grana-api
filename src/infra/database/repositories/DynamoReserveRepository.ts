@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { DeleteCommand, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Reserve } from '@application/entities/Reserve';
@@ -10,11 +10,11 @@ import { ReserveItem } from '../items/ReserveItem';
 import { mountUpdateCommandInput } from '../utils/mountUpdateCommandInput';
 
 @Injectable()
-export class DynamoReserveRepository implements IReserveRepository {
+export class DynamoReserveRepository extends IReserveRepository {
   constructor(
-    private readonly client: DynamoDBClient,
+    private readonly client: DynamoDBDocumentClient,
     protected readonly config: AppConfig,
-  ) {}
+  ) { super(); }
 
   async findById(accountId: string, reserveId: string): Promise<Reserve | null> {
     const command = new GetCommand({

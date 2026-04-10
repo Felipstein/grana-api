@@ -30,7 +30,7 @@ export class BufferingReserveRepository extends DynamoReserveRepository {
       Update: mountUpdateCommandInput({
         tableName: this.config.database.mainTable,
         item: ReserveItem.fromEntity(reserve).toItem(),
-        fields: ['name', 'platform'],
+        fields: ['name', 'platform', 'value'],
       }),
     });
   }

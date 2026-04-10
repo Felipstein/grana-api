@@ -15,7 +15,10 @@ export class ResolveCategoryService {
 
   async resolve(params: ResolveParams): Promise<Category> {
     if (IDService.isValid(params.categoryIdOrName)) {
-      const existing = await this.categoryRepository.findById(params.categoryIdOrName);
+      const existing = await this.categoryRepository.findById(
+        params.accountId,
+        params.categoryIdOrName,
+      );
 
       if (existing) {
         return existing;

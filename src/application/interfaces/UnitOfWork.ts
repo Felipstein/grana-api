@@ -10,6 +10,6 @@ export interface IUnitOfWorkContext {
   categoryRepository: ICategoryRepository;
 }
 
-export interface IUnitOfWork {
-  run<T>(work: (ctx: IUnitOfWorkContext) => Promise<T>): Promise<T>;
+export abstract class IUnitOfWork {
+  abstract run<T>(work: (ctx: IUnitOfWorkContext) => Promise<T>): Promise<T>;
 }

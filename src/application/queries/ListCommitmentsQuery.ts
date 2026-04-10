@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Transaction } from '@application/entities/Transaction';
@@ -23,6 +23,7 @@ type Input = {
   accountId: string;
   period: Period;
   startSignature?: string;
+  hideReserveTransactions?: boolean;
 };
 
 type Output = {
@@ -34,7 +35,7 @@ type Output = {
 @Injectable()
 export class ListCommitmentsQuery {
   constructor(
-    private readonly dynamoClient: DynamoDBClient,
+    private readonly dynamoClient: DynamoDBDocumentClient,
     private readonly config: AppConfig,
     private readonly categoryLoader: CategoryLoader,
     private readonly summaryService: TransactionSummaryService,
@@ -42,7 +43,7 @@ export class ListCommitmentsQuery {
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    const { accountId, period, startSignature } = input;
+    const { accountId, period, startSignature, hideReserveTransactions } = input;
 
     const command = new QueryCommand({
       TableName: this.config.database.mainTable,
@@ -57,7 +58,12 @@ export class ListCommitmentsQuery {
 
     const { Items = [], LastEvaluatedKey } = await this.dynamoClient.send(command);
 
-    const transactionItems = Items as TransactionItem.Type[];
+    let transactionItems = Items as TransactionItem.Type[];
+
+    if (hideReserveTransactions) {
+      transactionItems = transactionItems.filter((item) => !item.reserveId);
+    }
+
     const categoryIdSet = new Set(transactionItems.map((item) => item.categoryId));
     const categories = await this.categoryLoader.load(accountId, categoryIdSet);
 

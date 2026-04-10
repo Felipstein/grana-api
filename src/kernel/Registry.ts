@@ -7,6 +7,7 @@ export type Provider = {
 
 export class Registry {
   private static readonly providers = new Map<string, Provider>();
+  private static readonly values = new Map<string, unknown>();
 
   private constructor() {}
 
@@ -22,8 +23,33 @@ export class Registry {
     this.providers.set(token, { impl, deps });
   }
 
+  /**
+   * Register a concrete impl under an alternative token (e.g. an abstract class name).
+   * No-op if the token is already taken — first registration wins.
+   */
+  static alias(token: string, impl: Constructor) {
+    if (this.providers.has(token)) return;
+
+    const deps = Reflect.getMetadata('design:paramtypes', impl) ?? [];
+    this.providers.set(token, { impl, deps });
+  }
+
+  /**
+   * Provide a pre-built value for a given constructor token (e.g. DynamoDBDocumentClient).
+   * Overrides any registered provider for that token.
+   */
+  static provide<T>(token: { name: string }, value: T) {
+    this.values.set(token.name, value);
+  }
+
   static resolve<TImpl extends Constructor>(impl: TImpl): InstanceType<TImpl> {
     const token = impl.name;
+
+    // Pre-built values take precedence (e.g. SDK client singletons)
+    if (this.values.has(token)) {
+      return this.values.get(token) as InstanceType<TImpl>;
+    }
+
     const provider = this.providers.get(token);
 
     if (!provider) {
@@ -36,5 +62,6 @@ export class Registry {
 
   static reset() {
     this.providers.clear();
+    this.values.clear();
   }
 }

@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Transaction } from '@application/entities/Transaction';
@@ -51,7 +51,7 @@ type Output = {
 @Injectable()
 export class GetDashboardQuery {
   constructor(
-    private readonly dynamoClient: DynamoDBClient,
+    private readonly dynamoClient: DynamoDBDocumentClient,
     private readonly config: AppConfig,
     private readonly categoryLoader: CategoryLoader,
     private readonly summaryService: TransactionSummaryService,

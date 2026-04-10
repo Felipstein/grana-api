@@ -4,16 +4,16 @@ import { MethodNotAllowedError } from '../errors/MethodNotAllowedError';
 
 import type { TransactItem } from '../TransactItem';
 import type { Category } from '@application/entities/Category';
-import type { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
+import { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
 import type { AppConfig } from '@config/AppConfig';
 
-export class BufferingCategoryRepository implements ICategoryRepository {
+export class BufferingCategoryRepository extends ICategoryRepository {
   constructor(
     private readonly buffer: TransactItem[],
     private readonly config: AppConfig,
-  ) {}
+  ) { super(); }
 
-  async findById(_id: string): Promise<Category | null> {
+  async findById(_accountId: string, _categoryId: string): Promise<Category | null> {
     throw new MethodNotAllowedError('findById');
   }
 

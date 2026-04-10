@@ -14,13 +14,15 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "jsx": "react",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@application/*": ["src/application/*"],
       "@config/*": ["src/config/*"],
       "@infra/*": ["src/infra/*"],
       "@kernel/*": ["src/kernel/*"],
-      "@typess/*": ["src/types/*"]
+      "@typess/*": ["src/types/*"],
+      "@http/*": ["src/http/*"]
     }
   }
 }

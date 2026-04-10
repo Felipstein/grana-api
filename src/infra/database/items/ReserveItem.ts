@@ -25,7 +25,14 @@ export class ReserveItem extends DynamoItem<ReserveItem.Keys, ReserveItem.Attrib
   }
 
   static fromEntity(reserve: Reserve) {
-    return new ReserveItem(reserve);
+    return new ReserveItem({
+      id: reserve.id,
+      accountId: reserve.accountId,
+      name: reserve.name,
+      platform: reserve.platform,
+      value: reserve.value,
+      categoryId: reserve.categoryId,
+    });
   }
 }
 
