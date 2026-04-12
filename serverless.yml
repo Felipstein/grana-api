@@ -1,4 +1,5 @@
 org: felipstein
+frameworkVersion: '~4.34.0'
 service: grana
 
 provider:
