@@ -61,6 +61,16 @@ custom:
     MainTable: ${self:service}-${self:provider.stage}-table
     UserPool: ${self:service}-${self:provider.stage}-user-pool
     UserPoolClient: ${self:service}-${self:provider.stage}-user-pool-client
+  github:
+    org: felipstein
+    repo: grana-api
+  deletionProtection:
+    dynamodb:
+      prod: true
+      dev: false
+    cognito:
+      prod: ACTIVE
+      dev: INACTIVE
   serverless-offline:
     httpPort: 3000
     lambdaPort: 3002
@@ -269,6 +279,7 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:custom.resourceNames.MainTable}
+        DeletionProtectionEnabled: ${self:custom.deletionProtection.dynamodb.${self:provider.stage}}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: PK
@@ -331,7 +342,7 @@ resources:
           PreTokenGenerationConfig:
             LambdaArn: !GetAtt CognitoPreTokenGenerationLambdaFunction.Arn
             LambdaVersion: V2_0
-        DeletionProtection: ACTIVE
+        DeletionProtection: ${self:custom.deletionProtection.cognito.${self:provider.stage}}
 
     CognitoUserPoolClient:
       Type: AWS::Cognito::UserPoolClient
@@ -357,3 +368,42 @@ resources:
         FunctionName: !GetAtt CognitoPreTokenGenerationLambdaFunction.Arn
         Principal: cognito-idp.amazonaws.com
         SourceArn: !GetAtt CognitoUserPool.Arn
+
+    # ─── GitHub Actions OIDC ───────────────────────────────────────────────────
+    # Criada apenas no stack de prod (Condition: IsProd).
+    # O OIDC Provider é único por conta — criado uma vez via console ou CLI,
+    # não entra aqui. O ARN é construído via !Sub com o AccountId.
+    GitHubActionsRole:
+      Type: AWS::IAM::Role
+      Condition: IsProd
+      Properties:
+        RoleName: ${self:service}-github-actions-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+              Action: sts:AssumeRoleWithWebIdentity
+              Condition:
+                StringLike:
+                  token.actions.githubusercontent.com:sub: !Sub 'repo:${self:custom.github.org}/${self:custom.github.repo}:*'
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/PowerUserAccess
+        Policies:
+          - PolicyName: IAMRestrictedToProject
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: iam:*
+                  Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${self:service}-*'
+
+  Conditions:
+    IsProd: !Equals ['${self:provider.stage}', 'prod']
+
+  Outputs:
+    GitHubActionsRoleArn:
+      Condition: IsProd
+      Description: ARN da role para configurar no secret AWS_ROLE_ARN do GitHub
+      Value: !GetAtt GitHubActionsRole.Arn

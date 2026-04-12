@@ -1,0 +1,42 @@
+name: Deploy Prod
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write  # generate temporary OIDC token
+  contents: read   # allows do checkout into the code
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Sign into AWS using OIDC — change the GitHub token for temporary credentials of created role.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Deploying to prod, the Serverless Framework use the credentials from previous step.
+      - name: Deploy
+        run: pnpm exec serverless deploy --stage prod

@@ -4,6 +4,8 @@
   "scripts": {
     "dev": "sls offline start --reloadHandler --stage local",
     "setup:local": "tsx --env-file=scripts/setup-local/.env.local scripts/setup-local/index.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
