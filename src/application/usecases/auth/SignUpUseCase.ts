@@ -42,13 +42,16 @@ export class SignUpUseCase {
           email: input.email,
         });
 
-        const { externalId } = await this.authGateway.signUp(
+        let externalId: string | null = null;
+        this.saga.addCompensation(() =>
+          externalId ? this.authGateway.deleteUser(externalId) : Promise.resolve(),
+        );
+
+        ({ externalId } = await this.authGateway.signUp(
           accountBuilder.id,
           input.email,
           input.password,
-        );
-
-        this.saga.addCompensation(() => this.authGateway.deleteUser(externalId));
+        ));
 
         const account = accountBuilder.create(externalId);
 
