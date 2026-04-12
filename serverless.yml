@@ -62,7 +62,7 @@ custom:
     UserPool: ${self:service}-${self:provider.stage}-user-pool
     UserPoolClient: ${self:service}-${self:provider.stage}-user-pool-client
   github:
-    org: felipstein
+    org: Felipstein
     repo: grana-api
   deletionProtection:
     dynamodb:
