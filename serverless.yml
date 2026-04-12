@@ -131,6 +131,16 @@ functions:
           authorizer:
             name: cognitoAuthorizer
 
+  # ─── Categories (protected) ────────────────────────────────────────────────
+  categoriesList:
+    handler: src/functions/categories/list.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /categories
+          authorizer:
+            name: cognitoAuthorizer
+
   # ─── Transactions (protected) ────────────────────────────────────────────────
   transactionsList:
     handler: src/functions/transactions/list.handler

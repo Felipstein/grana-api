@@ -30,7 +30,7 @@ export class BufferingTransactionRepository extends DynamoTransactionRepository 
       Update: mountUpdateCommandInput({
         tableName: this.config.database.mainTable,
         item: TransactionItem.fromEntity(transaction).toItem(),
-        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations'],
+        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations', 'reserveId'],
       }),
     });
   }

@@ -78,7 +78,7 @@ export class DynamoTransactionRepository implements ITransactionRepository {
       mountUpdateCommandInput({
         tableName: this.config.database.mainTable,
         item,
-        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations'],
+        fields: ['type', 'value', 'description', 'date', 'categoryId', 'observations', 'reserveId'],
       }),
     );
 
