@@ -103,6 +103,15 @@ functions:
       COGNITO_USER_POOL_ID: ''
       COGNITO_CLIENT_ID: ''
 
+  cognitoPreSignUpTrigger:
+    handler: src/functions/auth/preSignUpTrigger.handler
+    events:
+      - cognitoUserPool:
+          pool: ${self:custom.resourceNames.UserPool}
+          trigger: PreSignUp
+          existing: true
+          forceDeploy: true
+
   # ─── Me (protected) ──────────────────────────────────────────────────────────
   meGet:
     handler: src/functions/me/get.handler
@@ -308,10 +317,10 @@ resources:
           - email
         Policies:
           PasswordPolicy:
-            MinimumLength: 8
-            RequireUppercase: true
-            RequireLowercase: true
-            RequireNumbers: true
+            MinimumLength: 6
+            RequireUppercase: false
+            RequireLowercase: false
+            RequireNumbers: false
             RequireSymbols: false
         Schema:
           - Name: accountId
@@ -332,8 +341,13 @@ resources:
         GenerateSecret: false
         ExplicitAuthFlows:
           - ALLOW_USER_PASSWORD_AUTH
-          - ALLOW_REFRESH_TOKEN_AUTH
         PreventUserExistenceErrors: ENABLED
+        TokenValidityUnits:
+          AccessToken: days
+        AccessTokenValidity: 1
+        RefreshTokenRotation:
+          Feature: ENABLED
+          RetryGracePeriodSeconds: 0
 
     # ─── Permission for Cognito to invoke the Pre Token Generation Lambda ──────
     CognitoPreTokenGenerationPermission:
