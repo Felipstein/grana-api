@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { InMemoryCategoryRepository } from '@application/_test/inMemory';
 import { Category } from '@application/entities/Category';
 import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { IDService } from '@application/services/IDService';
-
-import { InMemoryCategoryRepository } from '@application/_test/inMemory';
 
 import { ResolveCategoryService } from './ResolveCategoryService';
 
@@ -85,13 +84,24 @@ describe('ResolveCategoryService', () => {
       expect(categoryRepository.items[0].accountId).toBe(validAccountId);
     });
 
-    it('should create a new category on each call with the same name', async () => {
+    it('should reuse existing category when same name is resolved twice', async () => {
       const { categoryRepository, service } = makeService();
 
-      await service.resolve({ ...baseParams, categoryIdOrName: 'Saúde' });
-      await service.resolve({ ...baseParams, categoryIdOrName: 'Saúde' });
+      const first = await service.resolve({ ...baseParams, categoryIdOrName: 'Saúde' });
+      const second = await service.resolve({ ...baseParams, categoryIdOrName: 'Saúde' });
 
-      expect(categoryRepository.items).toHaveLength(2);
+      expect(categoryRepository.items).toHaveLength(1);
+      expect(second.id).toBe(first.id);
+    });
+
+    it('should reuse existing category when name normalizes to the same slug', async () => {
+      const { categoryRepository, service } = makeService();
+
+      const first = await service.resolve({ ...baseParams, categoryIdOrName: 'Saúde' });
+      const second = await service.resolve({ ...baseParams, categoryIdOrName: 'saude' });
+
+      expect(categoryRepository.items).toHaveLength(1);
+      expect(second.id).toBe(first.id);
     });
   });
 });

@@ -1,5 +1,4 @@
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 import { Transaction } from '@application/entities/Transaction';
 import { TransactionSummaryService } from '@application/services/TransactionSummaryService';

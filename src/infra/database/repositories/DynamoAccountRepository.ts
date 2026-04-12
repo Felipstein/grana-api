@@ -1,5 +1,10 @@
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 import { Account } from '@application/entities/Account';
 import { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
@@ -14,7 +19,9 @@ export class DynamoAccountRepository extends IAccountRepository {
   constructor(
     protected readonly client: DynamoDBDocumentClient,
     protected readonly config: AppConfig,
-  ) { super(); }
+  ) {
+    super();
+  }
 
   async findById(id: string): Promise<Account | null> {
     const command = new GetCommand({

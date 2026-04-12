@@ -155,7 +155,6 @@ describe('Reserve setters', () => {
       expect(() => (reserve.platform = 'A'.repeat(201))).toThrow(ValueObjectError);
     });
   });
-
 });
 
 describe('Reserve.deposit', () => {
@@ -185,7 +184,9 @@ describe('Reserve.deposit', () => {
 
   it('should not change the value when deposit fails', () => {
     const reserve = create({ value: 1000 });
-    try { reserve.deposit(-1); } catch {}
+    try {
+      reserve.deposit(-1);
+    } catch {}
     expect(reserve.value).toBe(1000);
   });
 });
@@ -215,7 +216,9 @@ describe('Reserve.withdraw', () => {
 
   it('should not change the value when withdrawal fails', () => {
     const reserve = create({ value: 500 });
-    try { reserve.withdraw(600); } catch {}
+    try {
+      reserve.withdraw(600);
+    } catch {}
     expect(reserve.value).toBe(500);
   });
 });

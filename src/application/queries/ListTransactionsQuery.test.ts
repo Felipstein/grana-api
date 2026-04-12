@@ -1,4 +1,3 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@config/AppConfig', () => ({
@@ -12,17 +11,19 @@ import { IDService } from '@application/services/IDService';
 import { TransactionSummaryService } from '@application/services/TransactionSummaryService';
 import { Period } from '@application/valueObjects/Period';
 import { AppConfig } from '@config/AppConfig';
-import { CategoryLoader } from '@infra/database/services/CategoryLoader';
 import { PaginationService } from '@infra/database/services/PaginationService';
-import { TransactionItem } from '@infra/database/items/TransactionItem';
 
 import { ListTransactionsQuery } from './ListTransactionsQuery';
 
-import type { CategoryData } from '@infra/database/services/CategoryLoader';
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import type { TransactionItem } from '@infra/database/items/TransactionItem';
+import type { CategoryLoader, CategoryData } from '@infra/database/services/CategoryLoader';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const makeDynamoItem = (overrides: Partial<TransactionItem.Attributes> = {}): TransactionItem.Type => {
+const makeDynamoItem = (
+  overrides: Partial<TransactionItem.Attributes> = {},
+): TransactionItem.Type => {
   const id = IDService.generate();
   const accountId = IDService.generate();
   const categoryId = IDService.generate();
@@ -57,7 +58,10 @@ const makeCategoryData = (): CategoryData => ({
 });
 
 const makeQuery = () => {
-  const dynamoClient = { send: vi.fn() } as unknown as DynamoDBClient;
+  const sendMock = vi.fn<(cmd: any) => Promise<any>>();
+  const dynamoClient = {
+    send: sendMock,
+  } as unknown as DynamoDBDocumentClient;
   const config = new AppConfig();
   const categoryLoader = { load: vi.fn() } as unknown as CategoryLoader;
   const summaryService = new TransactionSummaryService();
@@ -71,7 +75,7 @@ const makeQuery = () => {
     paginationService,
   );
 
-  return { dynamoClient, categoryLoader, query };
+  return { sendMock, categoryLoader, query };
 };
 
 const validAccountId = IDService.generate();
@@ -92,8 +96,8 @@ const execute = (
 describe('ListTransactionsQuery', () => {
   describe('base behavior', () => {
     it('should return empty transactions when none exist', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       const result = await execute(query);
@@ -102,11 +106,15 @@ describe('ListTransactionsQuery', () => {
     });
 
     it('should map transaction fields correctly', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      const item = makeDynamoItem({ value: 500, description: 'Salário', type: Transaction.Type.INCOME });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      const item = makeDynamoItem({
+        value: 500,
+        description: 'Salário',
+        type: Transaction.Type.INCOME,
+      });
       const category = makeCategoryData();
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [item] });
+      sendMock.mockResolvedValue({ Items: [item] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map([[item.categoryId, category]]));
 
       const { transactions } = await execute(query);
@@ -123,106 +131,106 @@ describe('ListTransactionsQuery', () => {
 
   describe('filters — DynamoDB FilterExpression', () => {
     it('should pass type filter in FilterExpression', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { type: Transaction.Type.INCOME } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('#type = :type');
       expect(command.input.ExpressionAttributeValues[':type']).toBe(Transaction.Type.INCOME);
     });
 
     it('should pass search filter as contains on description', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { search: 'Mercado' } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('contains(#description, :search)');
       expect(command.input.ExpressionAttributeValues[':search']).toBe('Mercado');
     });
 
     it('should pass minValue filter', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { minValue: 100 } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('#value >= :minValue');
       expect(command.input.ExpressionAttributeValues[':minValue']).toBe(100);
     });
 
     it('should pass maxValue filter', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { maxValue: 500 } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('#value <= :maxValue');
     });
 
     it('should combine multiple filters with AND', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { type: Transaction.Type.EXPENSE, search: 'Mercado' } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain(' AND ');
     });
 
     it('should not set FilterExpression when no filters provided', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query);
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toBeUndefined();
     });
 
     it('should pass minPeriod as date filter', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { minPeriod: new Period('2026-01') } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('#date >= :minDate');
     });
 
     it('should pass maxPeriod as date filter', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       await execute(query, { filters: { maxPeriod: new Period('2026-04') } });
 
-      const command = vi.mocked(dynamoClient.send).mock.calls[0][0] as any;
+      const command = sendMock.mock.calls[0][0] as any;
       expect(command.input.FilterExpression).toContain('#date <= :maxDate');
     });
   });
 
   describe('filters — in-memory', () => {
     it('should filter by categoryIds', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const targetCategoryId = IDService.generate();
       const otherCategoryId = IDService.generate();
       const item1 = makeDynamoItem({ categoryId: targetCategoryId });
       const item2 = makeDynamoItem({ categoryId: otherCategoryId });
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [item1, item2] });
+      sendMock.mockResolvedValue({ Items: [item1, item2] });
       vi.mocked(categoryLoader.load).mockResolvedValue(
         new Map([[targetCategoryId, makeCategoryData()]]),
       );
@@ -236,11 +244,11 @@ describe('ListTransactionsQuery', () => {
     });
 
     it('should filter by recurrenceType', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const recurring = makeDynamoItem({ recurrenceType: Transaction.RecurrenceType.RECURRING });
       const once = makeDynamoItem({ recurrenceType: null });
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [recurring, once] });
+      sendMock.mockResolvedValue({ Items: [recurring, once] });
       vi.mocked(categoryLoader.load).mockResolvedValue(
         new Map([
           [recurring.categoryId, makeCategoryData()],
@@ -257,11 +265,11 @@ describe('ListTransactionsQuery', () => {
     });
 
     it('should return all when recurrenceType contains ALL', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const item1 = makeDynamoItem({ recurrenceType: Transaction.RecurrenceType.RECURRING });
       const item2 = makeDynamoItem({ recurrenceType: null });
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [item1, item2] });
+      sendMock.mockResolvedValue({ Items: [item1, item2] });
       vi.mocked(categoryLoader.load).mockResolvedValue(
         new Map([
           [item1.categoryId, makeCategoryData()],
@@ -279,11 +287,11 @@ describe('ListTransactionsQuery', () => {
 
   describe('summary', () => {
     it('should calculate summary from returned transactions', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const income = makeDynamoItem({ type: Transaction.Type.INCOME, value: 3000 });
       const expense = makeDynamoItem({ type: Transaction.Type.EXPENSE, value: 1000 });
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [income, expense] });
+      sendMock.mockResolvedValue({ Items: [income, expense] });
       vi.mocked(categoryLoader.load).mockResolvedValue(
         new Map([
           [income.categoryId, makeCategoryData()],
@@ -299,11 +307,11 @@ describe('ListTransactionsQuery', () => {
     });
 
     it('should calculate summary only from filtered transactions', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const income = makeDynamoItem({ type: Transaction.Type.INCOME, value: 3000 });
       const expense = makeDynamoItem({ type: Transaction.Type.EXPENSE, value: 1000 });
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [income, expense] });
+      sendMock.mockResolvedValue({ Items: [income, expense] });
       vi.mocked(categoryLoader.load).mockResolvedValue(
         new Map([[income.categoryId, makeCategoryData()]]),
       );
@@ -319,10 +327,13 @@ describe('ListTransactionsQuery', () => {
 
   describe('pagination', () => {
     it('should return exclusiveStartSignature when more pages exist', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
+      const { sendMock, categoryLoader, query } = makeQuery();
       const lastKey = { PK: `ACCOUNT#${validAccountId}`, SK: 'TRANSACTION#2026-04#xyz' };
 
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [], LastEvaluatedKey: lastKey });
+      sendMock.mockResolvedValue({
+        Items: [],
+        LastEvaluatedKey: lastKey,
+      });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       const { exclusiveStartSignature } = await execute(query);
@@ -331,8 +342,8 @@ describe('ListTransactionsQuery', () => {
     });
 
     it('should not return exclusiveStartSignature on last page', async () => {
-      const { dynamoClient, categoryLoader, query } = makeQuery();
-      vi.mocked(dynamoClient.send).mockResolvedValue({ Items: [] });
+      const { sendMock, categoryLoader, query } = makeQuery();
+      sendMock.mockResolvedValue({ Items: [] });
       vi.mocked(categoryLoader.load).mockResolvedValue(new Map());
 
       const { exclusiveStartSignature } = await execute(query);

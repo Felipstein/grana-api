@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { InMemoryUnitOfWork } from '@application/_test/inMemory';
 import { Category } from '@application/entities/Category';
 import { Transaction } from '@application/entities/Transaction';
 import { IDService } from '@application/services/IDService';
-
-import { InMemoryUnitOfWork } from '@application/_test/inMemory';
 
 import { CreateTransactionUseCase } from './CreateTransactionUseCase';
 

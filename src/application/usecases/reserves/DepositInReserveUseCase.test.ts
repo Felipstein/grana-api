@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { InMemoryUnitOfWork } from '@application/_test/inMemory';
 import { Reserve } from '@application/entities/Reserve';
 import { Transaction } from '@application/entities/Transaction';
 import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { IDService } from '@application/services/IDService';
-
-import { InMemoryUnitOfWork } from '@application/_test/inMemory';
 
 import { DepositInReserveUseCase } from './DepositInReserveUseCase';
 
@@ -40,7 +39,13 @@ describe('DepositInReserveUseCase', () => {
       const { useCase } = makeUseCase();
 
       await expect(
-        useCase.execute({ reserveId: IDService.generate(), accountId: validAccountId, value: 500, date: new Date(), observations: null }),
+        useCase.execute({
+          reserveId: IDService.generate(),
+          accountId: validAccountId,
+          value: 500,
+          date: new Date(),
+          observations: null,
+        }),
       ).rejects.toThrow(ResourceNotFoundError);
     });
 
@@ -49,7 +54,13 @@ describe('DepositInReserveUseCase', () => {
       const reserve = await seedReserve(uow);
 
       await expect(
-        useCase.execute({ reserveId: reserve.id, accountId: IDService.generate(), value: 500, date: new Date(), observations: null }),
+        useCase.execute({
+          reserveId: reserve.id,
+          accountId: IDService.generate(),
+          value: 500,
+          date: new Date(),
+          observations: null,
+        }),
       ).rejects.toThrow(ResourceNotFoundError);
     });
   });
@@ -59,7 +70,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow, { value: 1000 });
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date: new Date('2026-04-06'), observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date: new Date('2026-04-06'),
+        observations: null,
+      });
 
       expect(uow.reserveRepository.items[0].value).toBe(1500);
     });
@@ -68,7 +85,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow, { value: 1000 });
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 200, date: new Date('2026-04-06'), observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 200,
+        date: new Date('2026-04-06'),
+        observations: null,
+      });
 
       expect(uow.reserveRepository.items[0].value).toBe(1200);
     });
@@ -79,7 +102,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date: new Date('2026-04-06'), observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date: new Date('2026-04-06'),
+        observations: null,
+      });
 
       expect(uow.transactionRepository.items).toHaveLength(1);
       expect(uow.transactionRepository.items[0].type).toBe(Transaction.Type.EXPENSE);
@@ -89,7 +118,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date: new Date('2026-04-06'), observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date: new Date('2026-04-06'),
+        observations: null,
+      });
 
       expect(uow.transactionRepository.items[0].reserveId).toBe(reserve.id);
     });
@@ -99,7 +134,13 @@ describe('DepositInReserveUseCase', () => {
       const reserve = await seedReserve(uow);
       const date = new Date('2026-04-06');
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date, observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date,
+        observations: null,
+      });
 
       const tx = uow.transactionRepository.items[0];
       expect(tx.value).toBe(500);
@@ -111,7 +152,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date: new Date('2026-04-06'), observations: 'Décimo terceiro' });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date: new Date('2026-04-06'),
+        observations: 'Décimo terceiro',
+      });
 
       expect(uow.transactionRepository.items[0].observations).toBe('Décimo terceiro');
     });
@@ -120,7 +167,13 @@ describe('DepositInReserveUseCase', () => {
       const { uow, useCase } = makeUseCase();
       const reserve = await seedReserve(uow);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, value: 500, date: new Date('2026-04-06'), observations: null });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        value: 500,
+        date: new Date('2026-04-06'),
+        observations: null,
+      });
 
       expect(uow.transactionRepository.items[0].categoryId).toBe(reserve.categoryId);
     });
