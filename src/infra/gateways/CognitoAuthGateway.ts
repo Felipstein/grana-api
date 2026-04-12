@@ -1,5 +1,4 @@
 import {
-  AdminConfirmSignUpCommand,
   AdminDeleteUserCommand,
   AliasExistsException,
   CognitoIdentityProviderClient,
@@ -38,13 +37,6 @@ export class CognitoAuthGateway extends IAuthGateway {
           Username: email,
           Password: password,
           UserAttributes: [{ Name: 'custom:accountId', Value: accountId }],
-        }),
-      );
-
-      await cognitoClient.send(
-        new AdminConfirmSignUpCommand({
-          UserPoolId: this.config.auth.userPoolId,
-          Username: email,
         }),
       );
 
