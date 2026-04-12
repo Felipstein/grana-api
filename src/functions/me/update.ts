@@ -14,11 +14,16 @@ const schema = z.object({
   name: z.optional(z.string().check(z.minLength(2))),
 });
 
-export const handler = createLambdaFunction(async (event: APIGatewayProxyEventV2WithJWTAuthorizer) => {
-  const accountId = event.requestContext.authorizer.jwt.claims['accountId'] as string;
-  const { name } = schema.parse(JSON.parse(event.body ?? '{}'));
+export const handler = createLambdaFunction(
+  async (event: APIGatewayProxyEventV2WithJWTAuthorizer) => {
+    const accountId = event.requestContext.authorizer.jwt.claims['accountId'] as string;
+    const { name } = schema.parse(JSON.parse(event.body ?? '{}'));
 
-  await new UpdateAccountUseCase(new DynamoAccountRepository(docClient, config)).execute({ accountId, data: { name } });
+    await new UpdateAccountUseCase(new DynamoAccountRepository(docClient, config)).execute({
+      accountId,
+      data: { name },
+    });
 
-  return noContent();
-});
+    return noContent();
+  },
+);

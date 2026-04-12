@@ -74,6 +74,7 @@ export default [
       'import/prefer-default-export': 'off',
       'import/no-unresolved': 'off',
 
+      'no-empty': ['error', { allowEmptyCatch: true }],
       'no-unused-vars': 'off',
       'no-redeclare': 'off',
       'no-console': ['warn', { allow: ['info', 'warn', 'error'] }],
@@ -94,6 +95,13 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js'],
+    files: ['**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**', '*.config.js', '.serverless/**'],
   },
 ]

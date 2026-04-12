@@ -17,7 +17,9 @@ const schema = z.object({
 export const handler = createLambdaFunction(async (event: APIGatewayProxyEventV2) => {
   const { refreshToken } = schema.parse(JSON.parse(event.body ?? '{}'));
 
-  const result = await new RefreshTokenUseCase(new CognitoAuthGateway(config)).execute({ refreshToken });
+  const result = await new RefreshTokenUseCase(new CognitoAuthGateway(config)).execute({
+    refreshToken,
+  });
 
   return ok(result);
 });

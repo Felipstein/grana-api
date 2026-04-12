@@ -173,9 +173,7 @@ describe('Transaction.create', () => {
     });
 
     it('should allow reserveId without recurrence', () => {
-      expect(() =>
-        create({ reserveId: IDService.generate(), recurrence: null }),
-      ).not.toThrow();
+      expect(() => create({ reserveId: IDService.generate(), recurrence: null })).not.toThrow();
     });
   });
 

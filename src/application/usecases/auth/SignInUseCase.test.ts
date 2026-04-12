@@ -37,8 +37,8 @@ describe('SignInUseCase', () => {
     const { authGateway, useCase } = makeUseCase();
     vi.spyOn(authGateway, 'signIn').mockRejectedValueOnce(new Error('Invalid credentials'));
 
-    await expect(
-      useCase.execute({ email: 'felipe@email.com', password: 'wrong' }),
-    ).rejects.toThrow('Invalid credentials');
+    await expect(useCase.execute({ email: 'felipe@email.com', password: 'wrong' })).rejects.toThrow(
+      'Invalid credentials',
+    );
   });
 });

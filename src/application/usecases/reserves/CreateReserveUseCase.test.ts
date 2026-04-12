@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { IDService } from '@application/services/IDService';
-
 import { InMemoryUnitOfWork } from '@application/_test/inMemory';
+import { IDService } from '@application/services/IDService';
 
 import { CreateReserveUseCase } from './CreateReserveUseCase';
 

@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { InMemoryAuthGateway, InMemoryUnitOfWork } from '@application/_test/inMemory';
 import { ApplicationError } from '@application/errors/ApplicationError';
 import { Saga } from '@application/utils/Saga';
-
-import { InMemoryAuthGateway, InMemoryUnitOfWork } from '@application/_test/inMemory';
 
 import { SignUpUseCase } from './SignUpUseCase';
 
@@ -84,9 +83,7 @@ describe('SignUpUseCase', () => {
       const deleteUserSpy = vi.spyOn(authGateway, 'deleteUser');
       vi.spyOn(authGateway, 'signIn').mockRejectedValueOnce(new Error('signIn failed'));
 
-      await expect(
-        new SignUpUseCase(saga, uow, authGateway).execute(validInput),
-      ).rejects.toThrow();
+      await expect(new SignUpUseCase(saga, uow, authGateway).execute(validInput)).rejects.toThrow();
 
       expect(deleteUserSpy).toHaveBeenCalledOnce();
     });
@@ -96,9 +93,9 @@ describe('SignUpUseCase', () => {
       const uow = new InMemoryUnitOfWork();
       vi.spyOn(authGateway, 'signIn').mockRejectedValueOnce(new Error('signIn failed'));
 
-      await expect(
-        new SignUpUseCase(saga, uow, authGateway).execute(validInput),
-      ).rejects.toThrow('signIn failed');
+      await expect(new SignUpUseCase(saga, uow, authGateway).execute(validInput)).rejects.toThrow(
+        'signIn failed',
+      );
     });
   });
 });

@@ -1,5 +1,4 @@
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { paginateQuery } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, paginateQuery } from '@aws-sdk/lib-dynamodb';
 
 import { AppConfig } from '@config/AppConfig';
 import { CategoryItem } from '@infra/database/items/CategoryItem';

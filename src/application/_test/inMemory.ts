@@ -1,14 +1,15 @@
-import { Account } from '@application/entities/Account';
-import { Category } from '@application/entities/Category';
-import { Reserve } from '@application/entities/Reserve';
-import { Transaction } from '@application/entities/Transaction';
-
 import { IAuthGateway } from '@application/interfaces/AuthGateway';
-import { IUnitOfWork, IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
 import { IAccountRepository } from '@application/interfaces/repositories/AccountRepository';
 import { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
 import { IReserveRepository } from '@application/interfaces/repositories/ReserveRepository';
+import { IUnitOfWork } from '@application/interfaces/UnitOfWork';
+
+import type { Account } from '@application/entities/Account';
+import type { Category } from '@application/entities/Category';
+import type { Reserve } from '@application/entities/Reserve';
+import type { Transaction } from '@application/entities/Transaction';
 import type { ITransactionRepository } from '@application/interfaces/repositories/TransactionRepository';
+import type { IUnitOfWorkContext } from '@application/interfaces/UnitOfWork';
 
 export class InMemoryAccountRepository extends IAccountRepository {
   readonly items: Account[] = [];
@@ -99,7 +100,11 @@ export class InMemoryTransactionRepository implements ITransactionRepository {
 export class InMemoryAuthGateway extends IAuthGateway {
   readonly signedUpUsers: Array<{ accountId: string; email: string; externalId: string }> = [];
 
-  async signUp(accountId: string, email: string, _password: string): Promise<IAuthGateway.SignUpResult> {
+  async signUp(
+    accountId: string,
+    email: string,
+    _password: string,
+  ): Promise<IAuthGateway.SignUpResult> {
     const externalId = `ext-${accountId}`;
     this.signedUpUsers.push({ accountId, email, externalId });
     return { externalId };

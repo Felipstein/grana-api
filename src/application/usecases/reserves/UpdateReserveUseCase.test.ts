@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { InMemoryReserveRepository } from '@application/_test/inMemory';
 import { Reserve } from '@application/entities/Reserve';
 import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { IDService } from '@application/services/IDService';
-
-import { InMemoryReserveRepository } from '@application/_test/inMemory';
 
 import { UpdateReserveUseCase } from './UpdateReserveUseCase';
 
@@ -18,7 +17,10 @@ const makeUseCase = () => {
   return { reserveRepository, useCase };
 };
 
-const seedReserve = async (repo: InMemoryReserveRepository, overrides?: Partial<Reserve.CreateParams>) => {
+const seedReserve = async (
+  repo: InMemoryReserveRepository,
+  overrides?: Partial<Reserve.CreateParams>,
+) => {
   const reserve = Reserve.create({
     accountId: validAccountId,
     name: 'Nubank',
@@ -58,7 +60,11 @@ describe('UpdateReserveUseCase', () => {
       const { reserveRepository, useCase } = makeUseCase();
       const reserve = await seedReserve(reserveRepository);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, data: { name: 'Itaú' } });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        data: { name: 'Itaú' },
+      });
 
       expect(reserveRepository.items[0].name).toBe('Itaú');
     });
@@ -67,7 +73,11 @@ describe('UpdateReserveUseCase', () => {
       const { reserveRepository, useCase } = makeUseCase();
       const reserve = await seedReserve(reserveRepository);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, data: { platform: 'Corretora' } });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        data: { platform: 'Corretora' },
+      });
 
       expect(reserveRepository.items[0].platform).toBe('Corretora');
     });
@@ -76,7 +86,11 @@ describe('UpdateReserveUseCase', () => {
       const { reserveRepository, useCase } = makeUseCase();
       const reserve = await seedReserve(reserveRepository);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, data: { name: 'XP' } });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        data: { name: 'XP' },
+      });
 
       expect(reserveRepository.items[0].platform).toBe('Banco Digital');
     });
@@ -85,7 +99,11 @@ describe('UpdateReserveUseCase', () => {
       const { reserveRepository, useCase } = makeUseCase();
       const reserve = await seedReserve(reserveRepository);
 
-      await useCase.execute({ reserveId: reserve.id, accountId: validAccountId, data: { name: 'XP' } });
+      await useCase.execute({
+        reserveId: reserve.id,
+        accountId: validAccountId,
+        data: { name: 'XP' },
+      });
 
       expect(reserveRepository.items).toHaveLength(1);
       expect(reserveRepository.items[0].name).toBe('XP');

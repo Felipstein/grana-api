@@ -18,21 +18,23 @@ const schema = z.object({
   cursor: z.optional(z.string()),
 });
 
-export const handler = createLambdaFunction(async (event: APIGatewayProxyEventV2WithJWTAuthorizer) => {
-  const accountId = event.requestContext.authorizer.jwt.claims['accountId'] as string;
-  const q = schema.parse(event.queryStringParameters ?? {});
+export const handler = createLambdaFunction(
+  async (event: APIGatewayProxyEventV2WithJWTAuthorizer) => {
+    const accountId = event.requestContext.authorizer.jwt.claims['accountId'] as string;
+    const q = schema.parse(event.queryStringParameters ?? {});
 
-  const result = await new GetDashboardQuery(
-    docClient,
-    config,
-    new CategoryLoader(docClient, config),
-    new TransactionSummaryService(),
-    new PaginationService(),
-  ).execute({
-    accountId,
-    period: new Period(q.period as Period.AsString),
-    startSignature: q.cursor,
-  });
+    const result = await new GetDashboardQuery(
+      docClient,
+      config,
+      new CategoryLoader(docClient, config),
+      new TransactionSummaryService(),
+      new PaginationService(),
+    ).execute({
+      accountId,
+      period: new Period(q.period as Period.AsString),
+      startSignature: q.cursor,
+    });
 
-  return ok(result);
-});
+    return ok(result);
+  },
+);
