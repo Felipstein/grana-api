@@ -40,3 +40,5 @@ jobs:
       # Deploying to prod, the Serverless Framework use the credentials from previous step.
       - name: Deploy
         run: pnpm exec serverless deploy --stage prod
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
