@@ -17,6 +17,10 @@ export class BufferingCategoryRepository extends ICategoryRepository {
     throw new MethodNotAllowedError('findById');
   }
 
+  async findBySlug(_accountId: string, _slug: string): Promise<Category | null> {
+    throw new MethodNotAllowedError('findBySlug');
+  }
+
   async create(category: Category): Promise<void> {
     this.buffer.push({
       Put: {

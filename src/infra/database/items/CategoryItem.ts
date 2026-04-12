@@ -13,6 +13,8 @@ export class CategoryItem extends DynamoItem<
     super(CategoryItem.type, attrs, {
       PK: CategoryItem.getPK(attrs.accountId),
       SK: CategoryItem.getSK(attrs.id),
+      GSI1PK: CategoryItem.getGSI1PK(attrs.accountId),
+      GSI1SK: CategoryItem.getGSI1SK(attrs.slug),
     });
   }
 
@@ -24,11 +26,20 @@ export class CategoryItem extends DynamoItem<
     return `CATEGORY#${categoryId}`;
   }
 
+  static getGSI1PK(accountId: string): CategoryItem.Keys['GSI1PK'] {
+    return `CATEGORY#${accountId}`;
+  }
+
+  static getGSI1SK(slug: string): CategoryItem.Keys['GSI1SK'] {
+    return `CATEGORY#SLUG#${slug}`;
+  }
+
   static fromEntity(category: Category) {
     return new CategoryItem({
       id: category.id,
       accountId: category.accountId,
       name: category.name,
+      slug: category.slug,
       color: category.color,
       bgColor: category.bgColor,
     });
@@ -38,6 +49,7 @@ export class CategoryItem extends DynamoItem<
     return new Category(item.id, {
       accountId: item.accountId,
       name: item.name,
+      slug: item.slug,
       color: item.color,
       bgColor: item.bgColor,
     });
@@ -48,12 +60,15 @@ export namespace CategoryItem {
   export type Keys = {
     PK: `ACCOUNT#${string}`;
     SK: `CATEGORY#${string}`;
+    GSI1PK: `CATEGORY#${string}`;
+    GSI1SK: `CATEGORY#SLUG#${string}`;
   };
 
   export type Attributes = {
     id: string;
     accountId: string;
     name: string;
+    slug: string;
     color: string;
     bgColor: string;
   };

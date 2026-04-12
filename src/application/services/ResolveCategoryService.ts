@@ -1,4 +1,4 @@
-import { Category } from '@application/entities/Category';
+import { Category, slugify } from '@application/entities/Category';
 import { ResourceNotFoundError } from '@application/errors/ResourceNotFoundError';
 import { ICategoryRepository } from '@application/interfaces/repositories/CategoryRepository';
 import { Injectable } from '@kernel/decorators/Injectable';
@@ -27,9 +27,15 @@ export class ResolveCategoryService {
       throw new ResourceNotFoundError('Category not found.');
     }
 
+    const slug = slugify(params.categoryIdOrName);
+    const existing = await this.categoryRepository.findBySlug(params.accountId, slug);
+
+    if (existing) return existing;
+
     const category = Category.create({
       accountId: params.accountId,
       name: params.categoryIdOrName,
+      slug,
       color: params.color,
       bgColor: params.bgColor,
     });

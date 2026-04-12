@@ -39,6 +39,10 @@ export class InMemoryCategoryRepository extends ICategoryRepository {
     return this.items.find((c) => c.id === categoryId) ?? null;
   }
 
+  async findBySlug(_accountId: string, slug: string) {
+    return this.items.find((c) => c.slug === slug) ?? null;
+  }
+
   async create(category: Category) {
     this.items.push(category);
   }

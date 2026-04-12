@@ -5,6 +5,16 @@ import { validateSchemaInDomain } from '@application/utils/validateSchemaInDomai
 
 import { Entity } from './core/Entity';
 
+export function slugify(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 // ─── Color palette (Tailwind 600 / 50) ───────────────────────────────────────
 
 const COLOR_PALETTE = [
@@ -29,6 +39,7 @@ function randomColor() {
 const attrsSchema = z.object({
   accountId: IDService.idSchema,
   name: z.string().check(z.minLength(2), z.maxLength(128)),
+  slug: z.string().check(z.minLength(1)),
   color: z.string().check(z.regex(/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/)),
   bgColor: z.string().check(z.regex(/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/)),
 });
@@ -36,16 +47,21 @@ const attrsSchema = z.object({
 export class Category extends Entity {
   readonly accountId: string;
   readonly name: string;
+  readonly slug: string;
   readonly color: string;
   readonly bgColor: string;
 
   constructor(id: string, attrs: Category.CreateParams) {
     super(id);
 
-    const validated = validateSchemaInDomain(attrsSchema, attrs);
+    const validated = validateSchemaInDomain(attrsSchema, {
+      ...attrs,
+      slug: attrs.slug ?? slugify(attrs.name),
+    });
 
     this.accountId = validated.accountId;
     this.name = validated.name;
+    this.slug = validated.slug;
     this.color = validated.color;
     this.bgColor = validated.bgColor;
   }
@@ -61,9 +77,10 @@ export class Category extends Entity {
 }
 
 export namespace Category {
-  export type CreateParams = Omit<z.input<typeof attrsSchema>, 'color' | 'bgColor'> & {
+  export type CreateParams = Omit<z.input<typeof attrsSchema>, 'color' | 'bgColor' | 'slug'> & {
     color?: string;
     bgColor?: string;
+    slug?: string;
   };
 
   export type Attributes = z.output<typeof attrsSchema>;
