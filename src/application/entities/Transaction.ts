@@ -30,8 +30,8 @@ const attrsSchema = z
       z.discriminatedUnion('type', [
         z.object({
           type: z.literal(TransactionRecurrenceType.RECURRING),
-          totalInstallments: z.prefault(z.null(), null),
-          currentInstallment: z.prefault(z.null(), null),
+          totalInstallments: z._default(z.nullable(z.number().check(z.gte(1), z.lte(200))), null),
+          currentInstallment: z._default(z.nullable(z.number().check(z.gte(1), z.lte(200))), null),
         }),
         z
           .object({
